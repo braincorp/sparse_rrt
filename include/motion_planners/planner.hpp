@@ -57,6 +57,7 @@ public:
         , start_state(new double[this->state_dimension])
         , goal_state(new double[this->state_dimension])
         , goal_radius(in_radius)
+        , best_goal(nullptr)
         , state_bounds(a_state_bounds)
         , control_bounds(a_control_bounds)
         , distance(distance_function)
@@ -81,7 +82,7 @@ public:
 	 * @param controls The list of controls which comprise the solution.
 	 * @param costs The list of costs of the edges which comprise the solution.
 	 */
-	virtual void get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs) = 0;
+	virtual void get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs);
 
 	/**
 	 * @brief Perform an iteration of a motion planning algorithm.
@@ -197,6 +198,11 @@ protected:
 	 * @brief The size of the spherical goal region around the goal state.
 	 */
 	double goal_radius;
+
+	/**
+	 * @brief The best goal node found so far.
+	 */
+	tree_node_t* best_goal;
 
     /**
      * @brief Boundaries of the state space

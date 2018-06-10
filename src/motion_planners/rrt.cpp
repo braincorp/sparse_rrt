@@ -20,8 +20,7 @@
 
 
 rrt_node_t::rrt_node_t(double* point, unsigned int state_dimension, rrt_node_t* a_parent, tree_edge_t&& a_parent_edge, double a_cost)
-	    : tree_node_t(point, state_dimension, std::move(a_parent_edge), a_cost)
-	    , parent(a_parent)
+	    : tree_node_t(point, state_dimension, a_parent, std::move(a_parent_edge), a_cost)
 {
 }
 
@@ -30,54 +29,6 @@ rrt_node_t::~rrt_node_t() {
 }
 
 
-void rrt_t::get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs)
-{
-    std::vector<proximity_node_t*> close_nodes = metric.find_delta_close_and_closest(goal_state, goal_radius);
-
-    double length = std::numeric_limits<double>::max();;
-    for(unsigned i=0;i<close_nodes.size();i++)
-    {
-        rrt_node_t* v = (rrt_node_t*)(close_nodes[i]->get_state());
-        double temp = v->get_cost() ;
-        if( temp < length)
-        {
-            length = temp;
-            nearest = v;
-        }
-    }
-    //now nearest should be the closest node to the goal state
-    if(this->distance(goal_state,nearest->get_point(), this->state_dimension) < goal_radius)
-    {
-        std::deque<const rrt_node_t*> path;
-        while(nearest->get_parent()!=NULL)
-        {
-            path.push_front(nearest);
-            nearest = nearest->get_parent();
-        }
-
-        std::vector<double> root_state;
-        for (unsigned c=0; c<this->state_dimension; c++) {
-            root_state.push_back(root->get_point()[c]);
-        }
-        solution_path.push_back(root_state);
-
-        for(unsigned i=0;i<path.size();i++)
-        {
-            std::vector<double> current_state;
-            for (unsigned c=0; c<this->state_dimension; c++) {
-                current_state.push_back(path[i]->get_point()[c]);
-            }
-            solution_path.push_back(current_state);
-
-            std::vector<double> current_control;
-            for (unsigned c=0; c<this->control_dimension; c++) {
-                current_control.push_back(path[i]->get_parent_edge().get_control()[c]);
-            }
-            controls.push_back(current_control);
-            costs.push_back(path[i]->get_parent_edge().get_duration());
-        }
-    }
-}
 void rrt_t::step(system_interface* system, int min_time_steps, int max_time_steps, double integration_step)
 {
     double* sample_state = new double[this->state_dimension];
@@ -101,6 +52,12 @@ void rrt_t::step(system_interface* system, int min_time_steps, int max_time_step
         ));
         metric.add_node(new_node);
         number_of_nodes++;
+
+        if(this->distance(goal_state, new_node->get_point(), this->state_dimension) < goal_radius) {
+            if (this->best_goal == nullptr || new_node->get_cost() < this->best_goal->get_cost()) {
+                this->best_goal = new_node;
+            }
+        }
     }
     delete sample_state;
     delete sample_control;

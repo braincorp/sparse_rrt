@@ -38,9 +38,9 @@ def test_point_rrt():
     expected_results = {
         0: (1, None),
         10000: (7563, 5.4),
-        20000: (14952, 4.43),
-        30000: (22293, 4.43),
-        'final': (23021, 4.43)
+        20000: (14936, 4.43),
+        30000: (22263, 4.43),
+        'final': (22996, 4.43)
     }
 
     for iteration in range(number_of_iterations):
@@ -49,14 +49,15 @@ def test_point_rrt():
             solution = planner.get_solution()
 
             expected_number_of_nodes, expected_solution_cost = expected_results[iteration]
-            assert(expected_number_of_nodes == planner.get_number_of_nodes())
 
             if solution is None:
                 solution_cost = None
                 assert(expected_solution_cost is None)
+                assert (expected_number_of_nodes == planner.get_number_of_nodes())
             else:
                 solution_cost = np.sum(solution[2])
-                assert(abs(solution_cost - expected_solution_cost) < 1e-9)
+                assert(abs(solution_cost - expected_solution_cost) < 1e-6)
+                assert (expected_number_of_nodes == planner.get_number_of_nodes())
 
             print("Time: %.2fs, Iterations: %d, Nodes: %d, Solution Quality: %s" %
                   (time.time() - start_time, iteration, planner.get_number_of_nodes(), solution_cost))

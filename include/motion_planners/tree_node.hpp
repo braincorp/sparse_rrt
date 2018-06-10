@@ -186,10 +186,12 @@ public:
 	 * @param a_parent_edge Edge to the parent node
 	 * @param cost The path cost to this node.
 	 */
-	tree_node_t(const double* a_point, unsigned int state_dimension, tree_edge_t&& a_parent_edge, double a_cost)
+	tree_node_t(const double* a_point, unsigned int state_dimension, tree_node_t* a_parent,
+	            tree_edge_t&& a_parent_edge, double a_cost)
 	    : state_point_t(a_point, state_dimension)
 	    , parent_edge(std::move(a_parent_edge))
 	    , cost(a_cost)
+	    , parent(a_parent)
 	{
 	}
 
@@ -261,6 +263,16 @@ public:
         return this->cost;
     }
 
+    /**
+	 * @brief Return the parent node
+	 * @details Return the parent node
+	 *
+	 * @return parent node pointer
+	 */
+    tree_node_t* get_parent() const {
+        return this->parent;
+    }
+
 private:
     /**
     * @brief Parent edge
@@ -275,6 +287,11 @@ private:
      * @brief Children vertices
      */
     std::list<tree_node_t*> children;
+
+    /**
+     * @brief Parent node.
+     */
+    tree_node_t* parent;
 };
 
 #endif

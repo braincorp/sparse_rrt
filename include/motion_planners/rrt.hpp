@@ -37,24 +37,7 @@ public:
 	 * @param a_cost Cost of the edge
 	 */
 	rrt_node_t(double* point, unsigned int state_dimension, rrt_node_t* a_parent, tree_edge_t&& a_parent_edge, double a_cost);
-
 	~rrt_node_t();
-
-    /**
-	 * @brief Return the parent node
-	 * @details Return the parent node
-	 *
-	 * @return parent node pointer
-	 */
-    rrt_node_t* get_parent() const {
-        return this->parent;
-    }
-
-private:
-    /**
-     * @brief Parent node.
-     */
-    rrt_node_t* parent;
 };
 
 /**
@@ -94,11 +77,6 @@ public:
         delete this->root;
         this->root = nullptr;
 	}
-
-	/**
-	 * @copydoc planner_t::get_solution(std::vector<std::pair<double*,double> >&)
-	 */
-	virtual void get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs);
 
 	/**
 	 * @copydoc planner_t::step()

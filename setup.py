@@ -52,6 +52,7 @@ setup(
         include_dirs=['deps/pybind11/include',
                       'include'],
         sources=[
+            'src/motion_planners/planner.cpp',
             'src/motion_planners/rrt.cpp',
             'src/motion_planners/sst.cpp',
             'src/nearest_neighbors/graph_nearest_neighbors.cpp',

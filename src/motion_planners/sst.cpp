@@ -20,8 +20,7 @@
 
 
 sst_node_t::sst_node_t(const double* point, unsigned int state_dimension, sst_node_t* a_parent, tree_edge_t&& a_parent_edge, double a_cost)
-    : tree_node_t(point, state_dimension, std::move(a_parent_edge), a_cost)
-    , parent(a_parent)
+    : tree_node_t(point, state_dimension, a_parent, std::move(a_parent_edge), a_cost)
     , active(true)
     , witness(NULL)
 {
@@ -57,7 +56,6 @@ sst_t::sst_t(
     double delta_near, double delta_drain)
     : planner_t(in_start, in_goal, in_radius,
                 a_state_bounds, a_control_bounds, a_distance_function, random_seed)
-    , best_goal(nullptr)
     , sst_delta_near(delta_near)
     , sst_delta_drain(delta_drain)
 {
@@ -85,44 +83,6 @@ sst_t::~sst_t() {
     for (auto w: this->witness_nodes) {
         delete w;
     }
-}
-
-
-void sst_t::get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs)
-{
-	if(best_goal==NULL)
-		return;
-	sst_node_t* nearest_path_node = best_goal;
-	
-	//now nearest_path_node should be the closest node to the goal state
-	std::deque<sst_node_t*> path;
-	while(nearest_path_node->get_parent()!=NULL)
-	{
-		path.push_front(nearest_path_node);
-        nearest_path_node = nearest_path_node->get_parent();
-	}
-
-    std::vector<double> root_state;
-    for (unsigned c=0; c<this->state_dimension; c++) {
-        root_state.push_back(root->get_point()[c]);
-    }
-    solution_path.push_back(root_state);
-
-	for(unsigned i=0;i<path.size();i++)
-	{
-        std::vector<double> current_state;
-        for (unsigned c=0; c<this->state_dimension; c++) {
-            current_state.push_back(path[i]->get_point()[c]);
-        }
-        solution_path.push_back(current_state);
-
-        std::vector<double> current_control;
-        for (unsigned c=0; c<this->control_dimension; c++) {
-            current_control.push_back(path[i]->get_parent_edge().get_control()[c]);
-        }
-        controls.push_back(current_control);
-        costs.push_back(path[i]->get_parent_edge().get_duration());
-	}
 }
 
 void sst_t::step(system_interface* system, int min_time_steps, int max_time_steps, double integration_step)
@@ -286,7 +246,7 @@ bool sst_t::is_best_goal(tree_node_t* v)
 {
 	if(best_goal==NULL)
 		return false;
-    sst_node_t* new_v = best_goal;
+    tree_node_t* new_v = best_goal;
 
     while(new_v->get_parent()!=NULL)
     {

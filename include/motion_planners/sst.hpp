@@ -79,22 +79,7 @@ public:
 	    return this->witness;
 	}
 
-    /**
-	 * @brief Return the parent node
-	 * @details Return the parent node
-	 *
-	 * @return parent node pointer
-	 */
-    sst_node_t* get_parent() const {
-        return this->parent;
-    }
-
 private:
-    /**
-     * @brief Parent node.
-     */
-    sst_node_t* parent;
-
 	/**
 	 * A flag for inclusion in the metric.
 	 */
@@ -180,11 +165,6 @@ public:
 	virtual ~sst_t();
 
 	/**
-	 * @copydoc planner_t::get_solution(std::vector<std::pair<double*,double> >&)
-	 */
-	virtual void get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs);
-	
-	/**
 	 * @copydoc planner_t::step()
 	 */
 	 virtual void step(system_interface* system, int min_time_steps, int max_time_steps, double integration_step);
@@ -195,11 +175,6 @@ protected:
      * @brief The nearest neighbor data structure.
      */
     graph_nearest_neighbors_t metric;
-
-	/**
-	 * @brief The best goal node found so far.
-	 */
-	sst_node_t* best_goal;
 
 	/**
 	 * @brief Finds a node to propagate from.
