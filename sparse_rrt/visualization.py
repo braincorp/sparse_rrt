@@ -103,10 +103,7 @@ def render_svg(svg_string):
     exceptions = []
     for c in converters:
         try:
-            start_time = time.time()
-            result = c(svg_string)
-            print('Took %s to convert' % (time.time() - start_time,))
-            return result
+            return c(svg_string)
         except:
             import traceback
             exceptions.append(traceback.format_exc())
