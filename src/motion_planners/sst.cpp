@@ -47,15 +47,18 @@ sample_node_t::~sample_node_t()
 }
 
 sst_t::sst_t(
-    const double* in_start, const double* in_goal,
-    double in_radius,
+    const double* in_start,
     const std::vector<std::pair<double, double> >& a_state_bounds,
     const std::vector<std::pair<double, double> >& a_control_bounds,
     std::function<double(const double*, const double*, unsigned int)> a_distance_function,
+    std::function<bool(const double*, unsigned int)> a_goal_predicate,
     unsigned int random_seed,
     double delta_near, double delta_drain)
-    : planner_t(in_start, in_goal, in_radius,
-                a_state_bounds, a_control_bounds, a_distance_function, random_seed)
+    : planner_t(in_start,
+                a_state_bounds, a_control_bounds,
+                a_distance_function,
+                a_goal_predicate,
+                random_seed)
     , sst_delta_near(delta_near)
     , sst_delta_drain(delta_drain)
 {
@@ -153,17 +156,12 @@ void sst_t::add_to_tree(const double* sample_state, const double* sample_control
             ));
 			number_of_nodes++;
 
-	        if(best_goal==NULL && this->distance(new_node->get_point(), goal_state, this->state_dimension)<goal_radius)
-	        {
-	        	best_goal = new_node;
-	        	branch_and_bound((sst_node_t*)root);
-	        }
-	        else if(best_goal!=NULL && best_goal->get_cost() > new_node->get_cost() &&
-	                this->distance(new_node->get_point(), goal_state, this->state_dimension)<goal_radius)
-	        {
-	        	best_goal = new_node;
-	        	branch_and_bound((sst_node_t*)root);
-	        }
+            if (this->goal_predicate(new_node->get_point(), this->state_dimension)) {
+               if (this->best_goal == nullptr || new_node->get_cost() < this->best_goal->get_cost()) {
+                   this->best_goal = new_node;
+                   branch_and_bound((sst_node_t*)root);
+               }
+            }
 
             // Acquire representative again - it can be different
             representative = witness_sample->get_representative();

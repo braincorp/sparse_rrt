@@ -188,7 +188,7 @@ std::string visualize_tree(
     tree_node_t* root,
     const std::vector<std::vector<double>>& last_solution_path,
     projection_function projector,
-    double* start_state, double* goal_state,
+    const double* start_state,
     int image_width, int image_height,
     double solution_node_diameter, double solution_line_width, double tree_line_width)
 {
@@ -199,8 +199,6 @@ std::string visualize_tree(
 
 	svg::Circle circle(visualize_point(projector, start_state, dimensions), solution_node_diameter, svg::Fill( svg::Color(255,0,0) ));
 	doc<<circle;
-	svg::Circle circle2(visualize_point(projector, goal_state, dimensions), solution_node_diameter, svg::Fill( svg::Color(0,255,0) ));
-	doc<<circle2;
 
 	visualize_solution_path(last_solution_path, projector, doc, dimensions, solution_line_width);
 
@@ -214,7 +212,7 @@ std::string visualize_nodes(
     tree_node_t* root,
     const std::vector<std::vector<double>>& last_solution_path,
     projection_function projector,
-    double* start_state, double* goal_state,
+    const double* start_state,
     int image_width, int image_height,
     double node_diameter, double solution_node_diameter)
 {
@@ -233,8 +231,6 @@ std::string visualize_nodes(
 
 	svg::Circle circle(visualize_point(projector, start_state,dimensions), solution_node_diameter, svg::Fill( svg::Color(255,0,0) ));
 	doc<<circle;
-	svg::Circle circle2(visualize_point(projector, goal_state,dimensions), solution_node_diameter, svg::Fill( svg::Color(0,255,0) ));
-	doc<<circle2;
 
 	visualize_solution_nodes(last_solution_path, projector, doc, dimensions, solution_node_diameter);
 

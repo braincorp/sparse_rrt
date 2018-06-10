@@ -36,42 +36,38 @@ public:
 	 * @details Planner Constructor
 	 * 
 	 * @param in_start The start state.
-	 * @param in_goal The goal state
-	 * @param in_radius The radial size of the goal region centered at in_goal.
 	 * @param a_state_bounds A vector with boundaries of the state space (min and max)
 	 * @param a_control_bounds A vector with boundaries of the control space (min and max)
 	 * @param distance_function Function that returns distance between two state space points
+	 * @param a_goal_predicate A function that returns true if a state point is within a goal region
 	 * @param random_seed The seed for the random generator
 	 */
 	planner_t(
-	    const double* in_start, const double* in_goal,
-	    double in_radius,
+	    const double* in_start,
 	    const std::vector<std::pair<double, double> >& a_state_bounds,
         const std::vector<std::pair<double, double> >& a_control_bounds,
         std::function<double(const double*, const double*, unsigned int)> distance_function,
+        std::function<bool(const double*, unsigned int)> a_goal_predicate,
         unsigned int random_seed
     )
         : state_dimension(a_state_bounds.size())
         , control_dimension(a_control_bounds.size())
         , root(nullptr)
         , start_state(new double[this->state_dimension])
-        , goal_state(new double[this->state_dimension])
-        , goal_radius(in_radius)
         , best_goal(nullptr)
         , state_bounds(a_state_bounds)
         , control_bounds(a_control_bounds)
         , distance(distance_function)
+        , goal_predicate(a_goal_predicate)
         , random_generator(random_seed)
         , number_of_nodes(0)
     {
         std::copy(in_start, in_start + this->state_dimension, start_state);
-	    std::copy(in_goal, in_goal + this->state_dimension, goal_state);
 	}
 
 	virtual ~planner_t()
 	{
 	    delete[] start_state;
-	    delete[] goal_state;
 	}
 
 	/**
@@ -82,7 +78,7 @@ public:
 	 * @param controls The list of controls which comprise the solution.
 	 * @param costs The list of costs of the edges which comprise the solution.
 	 */
-	virtual void get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs);
+	void get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs);
 
 	/**
 	 * @brief Perform an iteration of a motion planning algorithm.
@@ -136,13 +132,6 @@ public:
 	 * @return start state
 	 */
 	double* get_start_state() {return this->start_state;};
-	/**
-	 * @brief Return goal state
-	 * @details Return goal state
-	 *
-	 * @return goal state
-	 */
-    double* get_goal_state() {return this->goal_state;};
 
     /**
 	 * @brief Return dimensionality of the state space
@@ -190,16 +179,6 @@ protected:
 	double* start_state;
 
 	/**
-	 * @brief The goal state of the motion planning query.
-	 */
-	double* goal_state;
-
-	/**
-	 * @brief The size of the spherical goal region around the goal state.
-	 */
-	double goal_radius;
-
-	/**
 	 * @brief The best goal node found so far.
 	 */
 	tree_node_t* best_goal;
@@ -217,6 +196,11 @@ protected:
      * @brief Distance function for the state space
      */
     std::function<double(const double*, const double*, unsigned int)> distance;
+
+    /**
+     * @brief Function that determines if the state point is in the goal region
+     */
+    std::function<bool(const double*, unsigned int)> goal_predicate;
 
     /**
      * @brief Random number generator for the planner

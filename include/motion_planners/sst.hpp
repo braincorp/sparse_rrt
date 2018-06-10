@@ -146,20 +146,19 @@ public:
 	 * @details SST planner Constructor
 	 *
 	 * @param in_start The start state.
-	 * @param in_goal The goal state
-	 * @param in_radius The radial size of the goal region centered at in_goal.
 	 * @param a_state_bounds A vector with boundaries of the state space (min and max)
 	 * @param a_control_bounds A vector with boundaries of the control space (min and max)
 	 * @param distance_function Function that returns distance between two state space points
+	 * @param a_goal_predicate A function that returns true if a state point is within a goal region
 	 * @param random_seed The seed for the random generator
 	 * @param delta_near Near distance threshold for SST
 	 * @param delta_drain Drain distance threshold for SST
 	 */
-	sst_t(const double* in_start, const double* in_goal,
-	      double in_radius,
+	sst_t(const double* in_start,
 	      const std::vector<std::pair<double, double> >& a_state_bounds,
 		  const std::vector<std::pair<double, double> >& a_control_bounds,
 		  std::function<double(const double*, const double*, unsigned int)> distance_function,
+		  std::function<bool(const double*, unsigned int)> a_goal_predicate,
 		  unsigned int random_seed,
 		  double delta_near, double delta_drain);
 	virtual ~sst_t();

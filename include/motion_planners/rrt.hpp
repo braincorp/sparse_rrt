@@ -37,7 +37,6 @@ public:
 	 * @param a_cost Cost of the edge
 	 */
 	rrt_node_t(double* point, unsigned int state_dimension, rrt_node_t* a_parent, tree_edge_t&& a_parent_edge, double a_cost);
-	~rrt_node_t();
 };
 
 /**
@@ -50,14 +49,17 @@ public:
 	/**
 	 * @copydoc planner_t::planner_t(system_t*)
 	 */
-	rrt_t(const double* in_start, const double* in_goal,
-	      double in_radius,
+	rrt_t(const double* in_start,
 	      const std::vector<std::pair<double, double> >& a_state_bounds,
 		  const std::vector<std::pair<double, double> >& a_control_bounds,
 		  std::function<double(const double*, const double*, unsigned int)> a_distance_function,
+		  std::function<bool(const double*, unsigned int)> a_goal_predicate,
           unsigned int random_seed)
-			: planner_t(in_start, in_goal, in_radius,
-			            a_state_bounds, a_control_bounds, a_distance_function, random_seed)
+			: planner_t(in_start,
+			            a_state_bounds, a_control_bounds,
+			            a_distance_function,
+			            a_goal_predicate,
+			            random_seed)
 	{
         //initialize the metric
         unsigned int state_dimensions = this->get_state_dimension();
@@ -84,22 +86,10 @@ public:
 	virtual void step(system_interface* system, int min_time_steps, int max_time_steps, double integration_step);
 
 protected:
-
     /**
      * @brief The nearest neighbor data structure.
      */
     graph_nearest_neighbors_t metric;
-
-	/**
-	 * @brief The result of a query in the nearest neighbor structure.
-	 */
-	rrt_node_t* nearest;
-
-	/**
-	 * @brief Find the nearest node to the randomly sampled state.
-	 * @details Find the nearest node to the randomly sampled state.
-	 */
-	rrt_node_t* nearest_vertex(const double* state) const;
 
 };
 

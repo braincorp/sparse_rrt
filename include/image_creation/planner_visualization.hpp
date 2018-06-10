@@ -29,7 +29,6 @@ typedef typename std::function<std::tuple<double, double>(const double*)> projec
  * @param last_solution_path Path with the solution to the planning problem.
  * @param projector Object that projects state space points onto image plane.
  * @param start_state Start state in the state space
- * @param goal_state Goal state in the state space
  * @param image_width Width of the drawing.
  * @param image_height Height of the drawing.
  * @param solution_node_diameter Diameter of a node.
@@ -42,7 +41,7 @@ std::string visualize_tree(
     tree_node_t* root,
     const std::vector<std::vector<double>>& last_solution_path,
     projection_function projector,
-    double* start_state, double* goal_state,
+    const double* start_state,
     int image_width, int image_height,
     double solution_node_diameter, double solution_line_width, double tree_line_width);
 
@@ -55,7 +54,6 @@ std::string visualize_tree(
  * @param last_solution_path Path with the solution to the planning problem.
  * @param projector Object that projects state space points onto image plane.
  * @param start_state Start state in the state space
- * @param goal_state Goal state in the state space
  * @param image_width Width of the drawing.
  * @param image_height Height of the drawing.
  * @param node_diameter Diameter of nodes
@@ -67,7 +65,7 @@ std::string visualize_nodes(
     tree_node_t* root,
     const std::vector<std::vector<double>>& last_solution_path,
     projection_function projector,
-    double* start_state, double* goal_state,
+    const double* start_state,
     int image_width, int image_height,
     double node_diameter, double solution_node_diameter);
 

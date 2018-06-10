@@ -143,7 +143,7 @@ public:
         std::string document_body = visualize_tree(
             planner->get_root(), solution_path,
             std::bind(&system_t::visualize_point, &system, _1, planner->get_state_dimension()),
-            planner->get_start_state(), planner->get_goal_state(),
+            planner->get_start_state(),
             image_width, image_height, solution_node_diameter, solution_line_width, tree_line_width);
 
         return std::move(document_body);
@@ -178,7 +178,6 @@ public:
             planner->get_root(), solution_path,
             std::bind(&system_t::visualize_point, &system, _1, planner->get_state_dimension()),
             planner->get_start_state(),
-            planner->get_goal_state(),
             image_width, image_height, node_diameter, solution_node_diameter);
 
         return std::move(document_body);
@@ -302,11 +301,18 @@ public:
                 return distance_computer->distance(p0, p1, dims);
             };
 
+        std::vector<double> goal_state_v(goal_state_array.shape()[0]);
+        std::copy(&goal_state(0), &goal_state(0) + goal_state_array.shape()[0], &goal_state_v[0]);
+        std::function<bool(const double*, unsigned int)> goal_predicate =
+            [=] (const double* p, unsigned int dims) {
+                return distance_computer->distance(&goal_state_v[0], p, dims) < goal_radius;
+            };
         planner.reset(
                 new sst_t(
-                        &start_state(0), &goal_state(0), goal_radius,
+                        &start_state(0),
                         state_bounds_v, control_bounds_v,
                         distance_f,
+                        goal_predicate,
                         random_seed,
                         sst_delta_near, sst_delta_drain)
         );
@@ -375,11 +381,19 @@ public:
                 return distance_computer->distance(p0, p1, dims);
             };
 
+        std::vector<double> goal_state_v(goal_state_array.shape()[0]);
+        std::copy(&goal_state(0), &goal_state(0) + goal_state_array.shape()[0], &goal_state_v[0]);
+        std::function<bool(const double*, unsigned int)> goal_predicate =
+            [=] (const double* p, unsigned int dims) {
+                return distance_computer->distance(&goal_state_v[0], p, dims) < goal_radius;
+            };
+
         planner.reset(
                 new rrt_t(
-                        &start_state(0), &goal_state(0), goal_radius,
+                        &start_state(0),
                         state_bounds_v, control_bounds_v,
                         distance_f,
+                        goal_predicate,
                         random_seed)
         );
     }

@@ -24,10 +24,6 @@ rrt_node_t::rrt_node_t(double* point, unsigned int state_dimension, rrt_node_t* 
 {
 }
 
-rrt_node_t::~rrt_node_t() {
-
-}
-
 
 void rrt_t::step(system_interface* system, int min_time_steps, int max_time_steps, double integration_step)
 {
@@ -37,7 +33,8 @@ void rrt_t::step(system_interface* system, int min_time_steps, int max_time_step
     this->random_state(sample_state);
     this->random_control(sample_control);
 
-    nearest = nearest_vertex(sample_state);
+    double distance;
+    rrt_node_t* nearest = (rrt_node_t*)metric.find_closest(sample_state, &distance)->get_state();
     int num_steps = this->random_generator.uniform_int_random(min_time_steps, max_time_steps);
     double duration = num_steps*integration_step;
     if(system->propagate(
@@ -53,7 +50,7 @@ void rrt_t::step(system_interface* system, int min_time_steps, int max_time_step
         metric.add_node(new_node);
         number_of_nodes++;
 
-        if(this->distance(goal_state, new_node->get_point(), this->state_dimension) < goal_radius) {
+        if(this->goal_predicate(new_node->get_point(), this->state_dimension)) {
             if (this->best_goal == nullptr || new_node->get_cost() < this->best_goal->get_cost()) {
                 this->best_goal = new_node;
             }
@@ -61,11 +58,5 @@ void rrt_t::step(system_interface* system, int min_time_steps, int max_time_step
     }
     delete sample_state;
     delete sample_control;
-}
-
-rrt_node_t* rrt_t::nearest_vertex(const double* state) const
-{
-    double distance;
-    return (rrt_node_t*)(metric.find_closest(state, &distance)->get_state());
 }
 
