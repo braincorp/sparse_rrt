@@ -28,11 +28,15 @@ def run_config(config):
         system = create_standard_system(config['system'])
     else:
         system = config['system']
+
+    if 'distance_computer' not in config:
+        config['distance_computer'] = system.distance_computer()
+
     if config['planner'] == 'sst':
         planner = SST(
             state_bounds=system.get_state_bounds(),
             control_bounds=system.get_control_bounds(),
-            distance=system.distance_computer(),
+            distance=config['distance_computer'],
             start_state=config['start_state'],
             goal_state=config['goal_state'],
             goal_radius=config['goal_radius'],
@@ -44,7 +48,7 @@ def run_config(config):
         planner = RRT(
             state_bounds=system.get_state_bounds(),
             control_bounds=system.get_control_bounds(),
-            distance=system.distance_computer(),
+            distance=config['distance_computer'],
             start_state=config['start_state'],
             goal_state=config['goal_state'],
             goal_radius=config['goal_radius'],

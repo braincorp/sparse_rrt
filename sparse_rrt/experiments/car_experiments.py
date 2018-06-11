@@ -1,6 +1,9 @@
+from sparse_rrt.distance_functions import euclidean_distance
 from sparse_rrt.experiments.experiment_utils import run_config
 
 # config for experiments with Car
+from sparse_rrt.systems import Car
+
 base_car_config = dict(
     start_state=[0., 0., 0.],
     goal_state=[9., 9., 0.],
@@ -12,6 +15,7 @@ base_car_config = dict(
     min_time_steps=20,
     max_time_steps=200,
     debug_period=1000,
+    distance_computer=euclidean_distance(Car().is_circular_topology(), weights=[1., 1., 1.]),
     number_of_iterations=300000,
     display_type='tree'
 )
@@ -28,4 +32,4 @@ sst_py_car_config = dict(planner='sst', **py_car_config)
 
 
 if __name__ == '__main__':
-    run_config(rrt_car_config)
+    run_config(sst_car_config)
