@@ -1,5 +1,6 @@
 from sparse_rrt import _sst_module
 import numpy as np
+from sparse_rrt.distance_functions import euclidean_distance
 
 
 class WithEuclideanDistanceComputer(object):
@@ -7,7 +8,7 @@ class WithEuclideanDistanceComputer(object):
     Add euclidian distance computer to a cpp system class
     '''
     def distance_computer(self):
-        return _sst_module.euclidean_distance(np.array(self.is_circular_topology()))
+        return euclidean_distance(np.array(self.is_circular_topology()))
 
 
 class Car(_sst_module.Car, WithEuclideanDistanceComputer):

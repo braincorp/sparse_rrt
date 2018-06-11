@@ -86,14 +86,17 @@ public:
  * @return euclidean_distance object
  */
 euclidean_distance create_euclidean_distance(
-    const py::safe_array<bool> &is_circular_topology_array)
+    const py::safe_array<bool> &is_circular_topology,
+    const py::safe_array<double> &weights_array)
 {
-    auto is_circular_topology = is_circular_topology_array.unchecked<1>();
-    std::vector<bool> is_circular_topology_v;
-    for (int i = 0; i < is_circular_topology_array.shape()[0]; i++) {
-        is_circular_topology_v.push_back(is_circular_topology(i));
-    }
-    return euclidean_distance(is_circular_topology_v);
+    runtime_assert(is_circular_topology.shape(0) == weights_array.shape(0));
+    std::vector<bool> is_circular_topology_v(
+        is_circular_topology.data(0),
+        is_circular_topology.data(0) + is_circular_topology.size());
+    std::vector<double> weights(
+        weights_array.data(0),
+        weights_array.data(0) + weights_array.size());
+    return euclidean_distance(is_circular_topology_v, weights);
 }
 
 
@@ -498,7 +501,10 @@ PYBIND11_MODULE(_sst_module, m) {
             return d.distance(p0.data(0), p1.data(0), p0.shape(0));
         });
    py::class_<two_link_acrobot_distance, distance_t>(m, "TwoLinkAcrobotDistance").def(py::init<>());
-   m.def("euclidean_distance", &create_euclidean_distance, "is_circular_topology"_a.noconvert());
+   m.def("euclidean_distance", &create_euclidean_distance,
+         "is_circular_topology"_a.noconvert(),
+         "weights"_a
+         );
 
    // Classes and interfaces for systems
    py::class_<system_interface, py_system_interface> system_interface_var(m, "ISystem");

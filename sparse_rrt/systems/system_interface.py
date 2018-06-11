@@ -1,6 +1,7 @@
 
 import sparse_rrt._sst_module
 import numpy as np
+from sparse_rrt.distance_functions import euclidean_distance
 
 
 class ISystem(sparse_rrt._sst_module.ISystem):
@@ -129,4 +130,4 @@ class BaseSystem(ISystem):
         Create euclidean distance object (implemented in cpp) based on the topology of the system
         :return: IDistance euclidean_distance
         '''
-        return sparse_rrt._sst_module.euclidean_distance(np.array(self.is_circular_topology()))
+        return euclidean_distance(np.array(self.is_circular_topology()))

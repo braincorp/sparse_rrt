@@ -27,6 +27,20 @@ def test_euclidean_distance_circular():
     np.testing.assert_almost_equal(dist.distance([0.1, 0.1], [2*np.pi - 0.1, -0.1]), 0.2*np.sqrt(2))
 
 
+def test_euclidean_distance_weighted():
+    dist = euclidean_distance([False, False], weights=[1., 10.])
+    np.testing.assert_almost_equal(dist.distance([0., 0.], [1., 0.]), 1)
+    np.testing.assert_almost_equal(dist.distance([0., 0.], [0., 1.]), 10.)
+
+    # shape mismatch
+    with pytest.raises(RuntimeError):
+        dist = euclidean_distance([True, False, False], weights=[1., 0.1])
+
+    dist = euclidean_distance([False, True, False], weights=[1., 0.1, 10.])
+    np.testing.assert_almost_equal(dist.distance([-1., 1., 0.], [0., np.pi*2, 0.5]), np.sqrt(0.01 + 1 + 10*10*0.5*0.5))
+
+
 if __name__ == '__main__':
     test_euclidean_distance_flat()
     test_euclidean_distance_circular()
+    test_euclidean_distance_weighted()
