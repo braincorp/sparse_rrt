@@ -131,3 +131,16 @@ class BaseSystem(ISystem):
         :return: IDistance euclidean_distance
         '''
         return euclidean_distance(np.array(self.is_circular_topology()))
+
+
+class IGoalPredicate(sparse_rrt._sst_module.IGoalPredicate):
+    '''
+    An interface to determine if a point satisfies certain goal criterion (e.g. lies in the goal region)
+    '''
+    def reached_goal(self, point):
+        '''
+        Compute distance between two points in the state space
+        :param point: np.array of a point in the state space
+        :return: Bool, whether the point satisfies certain goal criterion.
+        '''
+        raise NotImplementedError()

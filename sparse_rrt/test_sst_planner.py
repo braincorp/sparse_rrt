@@ -7,6 +7,7 @@ import time
 
 from sparse_rrt.systems.acrobot import Acrobot, AcrobotDistance
 from sparse_rrt.systems.point import Point
+from sparse_rrt.systems.system_interface import IGoalPredicate
 
 
 def test_point_sst():
@@ -199,9 +200,9 @@ def test_sst_custom_goal_predicate():
     '''
     system = standard_cpp_systems.Point()
 
-    class MyGoalPredicate(sparse_rrt._sst_module.IGoalPredicate):
+    class MyGoalPredicate(IGoalPredicate):
         def __init__(self):
-            sparse_rrt._sst_module.IGoalPredicate.__init__(self)
+            IGoalPredicate.__init__(self)
             self.threshold = 1.
 
         def reached_goal(self, point):
