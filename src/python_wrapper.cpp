@@ -16,7 +16,7 @@
 #include <pybind11/functional.h>
 
 #include <iostream>
-#include <assert.h>
+#include "utilities/runtime_assert.hpp"
 
 #include "systems/point.hpp"
 #include "systems/car.hpp"
@@ -492,7 +492,11 @@ PYBIND11_MODULE(_sst_module, m) {
    py::class_<distance_t, py_distance_interface> distance_interface_var(m, "IDistance");
    distance_interface_var
         .def(py::init<>());
-   py::class_<euclidean_distance, distance_t>(m, "EuclideanDistance");
+   py::class_<euclidean_distance, distance_t>(m, "EuclideanDistance")
+        .def("distance", [](const euclidean_distance &d, const py::safe_array<double> &p0, const py::safe_array<double> &p1) {
+            runtime_assert(p0.shape(0) == p1.shape(0));
+            return d.distance(p0.data(0), p1.data(0), p0.shape(0));
+        });
    py::class_<two_link_acrobot_distance, distance_t>(m, "TwoLinkAcrobotDistance").def(py::init<>());
    m.def("euclidean_distance", &create_euclidean_distance, "is_circular_topology"_a.noconvert());
 

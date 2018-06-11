@@ -17,6 +17,7 @@
 
 #include <iostream>
 #include <deque>
+#include <assert.h>
 
 
 sst_node_t::sst_node_t(const double* point, unsigned int state_dimension, sst_node_t* a_parent, tree_edge_t&& a_parent_edge, double a_cost)

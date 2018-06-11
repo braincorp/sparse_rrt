@@ -18,7 +18,7 @@
 #include <functional>
 #include <vector>
 #include <cmath>
-#include <assert.h>
+#include "utilities/runtime_assert.hpp"
 
 
 class distance_t
@@ -64,7 +64,7 @@ public:
 	 */
     double distance(const double* point1, const double* point2, unsigned int state_dimensions) const override {
         double result = 0;
-        assert(state_dimensions == _is_circular_topology.size());
+        runtime_assert(state_dimensions == _is_circular_topology.size());
         for (unsigned int i=0; i<state_dimensions; ++i) {
             if (_is_circular_topology[i]) {
                 double val = fabs(point1[i]-point2[i]);
