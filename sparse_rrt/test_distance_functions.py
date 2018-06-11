@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from sparse_rrt.distance_functions import euclidean_distance
+from sparse_rrt.distance_functions import euclidean_distance, DistanceGoalSphere
 
 
 def test_euclidean_distance_flat():
@@ -40,7 +40,18 @@ def test_euclidean_distance_weighted():
     np.testing.assert_almost_equal(dist.distance([-1., 1., 0.], [0., np.pi*2, 0.5]), np.sqrt(0.01 + 1 + 10*10*0.5*0.5))
 
 
+def test_goal_predicate():
+    goal_predicate = DistanceGoalSphere(euclidean_distance([False, False]), [2., -2.], 1.)
+
+    assert not goal_predicate.reached_goal([0., 0.])
+    assert not goal_predicate.reached_goal([2., 0.])
+    assert goal_predicate.reached_goal([2., -2.])
+    assert goal_predicate.reached_goal([2., -1.])
+    assert not goal_predicate.reached_goal([1.9, -1.])
+
+
 if __name__ == '__main__':
     test_euclidean_distance_flat()
     test_euclidean_distance_circular()
     test_euclidean_distance_weighted()
+    test_goal_predicate()

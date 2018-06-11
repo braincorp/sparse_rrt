@@ -72,7 +72,7 @@ public:
 
         auto result = overload(point1_array, point2_array);
         // Extract double result
-        return py::detail::cast_safe<double>(std::move(result));;
+        return py::detail::cast_safe<double>(std::move(result));
     }
 };
 
@@ -99,6 +99,60 @@ euclidean_distance create_euclidean_distance(
     return euclidean_distance(is_circular_topology_v, weights);
 }
 
+
+
+/**
+ * @brief Python trampoline for abstract distance_t
+ * @details Python trampoline for abstract distance_t to enable python classes override distance_t functions
+ *
+ */
+class py_goal_predicate_interface : public goal_predicate_t
+{
+public:
+
+	/**
+	 * @copydoc goal_predicate_t::reached_goal()
+	 */
+    bool reached_goal(const double* point, unsigned int state_dimension) const override
+    {
+        std::cout << "trampoline" << std::endl;
+        // Copy cpp points to numpy array
+        py::safe_array<double> point_array{{state_dimension}};
+        std::copy(point, point + state_dimension, point_array.mutable_data(0));
+
+        // Call python function
+        py::gil_scoped_acquire gil;
+        py::function overload = py::get_overload(static_cast<const goal_predicate_t *>(this), "reached_goal");
+        if (!overload) {
+            pybind11::pybind11_fail("Tried to call pure virtual function reached_goal");
+            return false;
+        }
+
+        auto result = overload(point_array);
+        // Extract double result
+        return py::detail::cast_safe<bool>(std::move(result));
+    }
+};
+
+
+class __attribute__ ((visibility ("hidden"))) py_distance_goal_sphere : public distance_goal_sphere {
+public:
+    py_distance_goal_sphere (
+        py::object distance_computer_py,
+        const py::safe_array<double> &goal_point,
+        double goal_radius)
+        : distance_goal_sphere(
+            distance_computer_py.cast<distance_t*>(),
+            goal_point.data(0),
+            goal_point.shape(0),
+            goal_radius)
+        , _distance_capture(distance_computer_py)
+    {
+    }
+
+private:
+    py::object _distance_capture;
+};
 
 /**
  * @brief Python wrapper for planner_t class
@@ -492,19 +546,32 @@ PYBIND11_MODULE(_sst_module, m) {
    m.doc() = "Python wrapper for SST planners";
 
    // Classes and interfaces for distance computation
-   py::class_<distance_t, py_distance_interface> distance_interface_var(m, "IDistance");
-   distance_interface_var
+   py::class_<distance_t, py_distance_interface>(m, "IDistance")
         .def(py::init<>());
+
    py::class_<euclidean_distance, distance_t>(m, "EuclideanDistance")
         .def("distance", [](const euclidean_distance &d, const py::safe_array<double> &p0, const py::safe_array<double> &p1) {
             runtime_assert(p0.shape(0) == p1.shape(0));
             return d.distance(p0.data(0), p1.data(0), p0.shape(0));
         });
-   py::class_<two_link_acrobot_distance, distance_t>(m, "TwoLinkAcrobotDistance").def(py::init<>());
+   py::class_<two_link_acrobot_distance, distance_t>(m, "TwoLinkAcrobotDistance")
+        .def(py::init<>());
+
    m.def("euclidean_distance", &create_euclidean_distance,
          "is_circular_topology"_a.noconvert(),
-         "weights"_a
+         "weights"_a.noconvert()
          );
+
+
+   py::class_<goal_predicate_t, py_goal_predicate_interface>(m, "IGoalPredicate")
+        .def(py::init<>());
+   py::class_<py_distance_goal_sphere, goal_predicate_t>(m, "DistanceGoalSphere")
+        .def(py::init<py::object,
+                      const py::safe_array<double>&,
+                      double>())
+        .def("reached_goal", [](const py_distance_goal_sphere &s, const py::safe_array<double> &p) {
+            return s.reached_goal(p.data(0), p.shape(0));
+        });
 
    // Classes and interfaces for systems
    py::class_<system_interface, py_system_interface> system_interface_var(m, "ISystem");

@@ -40,3 +40,4 @@ double two_link_acrobot_distance::distance(const double* p0, const double* p1, u
     return two_link_acrobot_t::distance(p0, p1, state_dimensions);
 }
 
+

@@ -13,3 +13,7 @@ def euclidean_distance(is_circular_topology, weights=None):
     if weights is None:
         weights = np.ones_like(is_circular_topology, dtype=np.float64)
     return _sst_module.euclidean_distance(np.asarray(is_circular_topology), np.asarray(weights))
+
+
+class DistanceGoalSphere(_sst_module.DistanceGoalSphere):
+    pass

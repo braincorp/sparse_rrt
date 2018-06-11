@@ -38,6 +38,22 @@ public:
 };
 
 
+class goal_predicate_t
+{
+public:
+    /**
+     * @brief Determines if a point satisfies certain goal criterion.
+     * @details Determines if a point satisfies certain goal criterion (e.g. lies in the goal region)
+     *
+     * @param point A point in the state space.
+     * @param state_dimensions dimensionality of the state space
+     *
+     * @return whether the point satisfies certain goal criterion.
+     */
+    virtual bool reached_goal(const double* point, unsigned int state_dimensions) const = 0;
+};
+
+
 /**
  * @brief Computer of weighted euclidean distance between state points
  * @details Computer of weighted euclidean distance between state points. Computes the distance based on the topology of the system
@@ -85,6 +101,33 @@ public:
 	 * @copydoc distance_t::distance()
 	 */
     double distance(const double* point1, const double* point2, unsigned int state_dimensions) const override;
+};
+
+/**
+ * @brief Goal predicate that is true when the distance between a point and the goal point is smaller than threshold
+ * @details This is the most common predicate that returns true if a point lies in the sphere determines by the distance function
+ *
+ */
+
+class distance_goal_sphere: public goal_predicate_t
+{
+public:
+    distance_goal_sphere(const distance_t* distance, const double* goal_point, unsigned int state_dimensions, double radius)
+        : _distance(distance)
+        , _goal_point(goal_point, goal_point+state_dimensions)
+        , _radius(radius)
+    {
+
+    }
+
+    bool reached_goal(const double* point, unsigned int state_dimensions) const override {
+        return this->_distance->distance(point, &(this->_goal_point[0]), state_dimensions) <= this->_radius;
+    }
+
+private:
+    const distance_t* _distance;
+    std::vector<double> _goal_point;
+    double _radius;
 };
 
 #endif //SPARSERRT_DISTANCE_FUNCTIONS_H
