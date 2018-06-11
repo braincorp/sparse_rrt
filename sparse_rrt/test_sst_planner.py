@@ -1,5 +1,6 @@
-
-import _sst_module
+import sparse_rrt
+from sparse_rrt.distance_functions import DistanceGoalSphere
+from sparse_rrt.planners import SST
 from sparse_rrt.systems import standard_cpp_systems
 import numpy as np
 import time
@@ -15,13 +16,14 @@ def test_point_sst():
     '''
     system = standard_cpp_systems.Point()
 
-    planner = _sst_module.SSTWrapper(
+    planner = SST(
         state_bounds=system.get_state_bounds(),
         control_bounds=system.get_control_bounds(),
         distance=system.distance_computer(),
         start_state=np.array([0., 0.]),
-        goal_state=np.array([9., 9.]),
-        goal_radius=0.5,
+        goal_predicate=DistanceGoalSphere(system.distance_computer(),
+                                          goal_state=np.array([9., 9.]),
+                                          goal_radius=0.5),
         random_seed=0,
         sst_delta_near=0.4,
         sst_delta_drain=0.2
@@ -82,13 +84,14 @@ def test_create_multiple_times():
     system = standard_cpp_systems.CartPole()
     planners = []
     for i in range(100):
-        planner = _sst_module.SSTWrapper(
+        planner = SST(
             state_bounds=system.get_state_bounds(),
             control_bounds=system.get_control_bounds(),
             distance=system.distance_computer(),
             start_state=np.array([-20, 0, 3.14, 0]),
-            goal_state=np.array([20, 0, 3.14, 0]),
-            goal_radius=1.5,
+            goal_predicate=DistanceGoalSphere(system.distance_computer(),
+                                              goal_state=np.array([20, 0, 3.14, 0]),
+                                              goal_radius=1.5),
             random_seed=0,
             sst_delta_near=2.,
             sst_delta_drain=1.2
@@ -106,13 +109,14 @@ def test_py_system_sst():
 
     system = Point()
 
-    planner = _sst_module.SSTWrapper(
+    planner = SST(
         state_bounds=system.get_state_bounds(),
         control_bounds=system.get_control_bounds(),
         distance=system.distance_computer(),
         start_state=np.array([0.2, 0.1]),
-        goal_state=np.array([5., 5.]),
-        goal_radius=1.5,
+        goal_predicate=DistanceGoalSphere(system.distance_computer(),
+                                          goal_state=np.array([5., 5.]),
+                                          goal_radius=1.5),
         random_seed=0,
         sst_delta_near=0.6,
         sst_delta_drain=0.4
@@ -134,14 +138,15 @@ def test_py_system_sst_custom_distance():
 
     system = Acrobot()
 
-    planner = _sst_module.SSTWrapper(
+    planner = SST(
         state_bounds=system.get_state_bounds(),
         control_bounds=system.get_control_bounds(),
         # use custom distance computer
         distance=AcrobotDistance(),
         start_state=np.array([0., 0., 0., 0.]),
-        goal_state=np.array([np.pi, 0., 0., 0.]),
-        goal_radius=2.,
+        goal_predicate=DistanceGoalSphere(AcrobotDistance(),
+                                          goal_state=np.array([np.pi, 0., 0., 0.]),
+                                          goal_radius=2.),
         random_seed=0,
         sst_delta_near=0.6,
         sst_delta_drain=0.4
@@ -163,13 +168,14 @@ def test_multiple_runs_same_result_sst():
     system = standard_cpp_systems.Point()
 
     def _create_planner():
-        return _sst_module.SSTWrapper(
+        return SST(
             state_bounds=system.get_state_bounds(),
             control_bounds=system.get_control_bounds(),
             distance=system.distance_computer(),
             start_state=np.array([0., 0.]),
-            goal_state=np.array([9., 9.]),
-            goal_radius=0.5,
+            goal_predicate=DistanceGoalSphere(system.distance_computer(),
+                                              goal_state=np.array([9., 9.]),
+                                              goal_radius=0.5,),
             random_seed=0,
             sst_delta_near=0.6,
             sst_delta_drain=0.4
@@ -187,12 +193,55 @@ def test_multiple_runs_same_result_sst():
         assert original_number_of_nodes == planner.get_number_of_nodes()
 
 
+def test_sst_custom_goal_predicate():
+    '''
+    Override goal predicate in python
+    '''
+    system = standard_cpp_systems.Point()
+
+    class MyGoalPredicate(sparse_rrt._sst_module.IGoalPredicate):
+        def __init__(self):
+            sparse_rrt._sst_module.IGoalPredicate.__init__(self)
+            self.threshold = 1.
+
+        def reached_goal(self, point):
+            return point[0] > self.threshold
+
+    goal_predicate = MyGoalPredicate()
+    goal_predicate.threshold = 1000.
+
+    planner = SST(
+            state_bounds=system.get_state_bounds(),
+            control_bounds=system.get_control_bounds(),
+            distance=system.distance_computer(),
+            start_state=np.array([0., 0.]),
+            goal_predicate=goal_predicate,
+            random_seed=0,
+            sst_delta_near=0.6,
+            sst_delta_drain=0.4
+        )
+
+    for i in range(1000):
+        planner.step(system, 10, 50, 0.02)
+
+    solution = planner.get_solution()
+    # can not find solution - too large goal threshold
+    assert solution is None
+
+    # now all points are in the goal region
+    goal_predicate.threshold = -100.
+    planner.step(system, 10, 50, 0.02)
+    solution = planner.get_solution()
+    assert solution is not None
+
+
 if __name__ == '__main__':
     st = time.time()
-    test_point_sst()
-    print("Current test time: %fs (baseline: %fs)" % (time.time() - st, 21.4076721668))
-    test_create_multiple_times()
-    test_py_system_sst()
-    test_py_system_sst_custom_distance()
-    test_multiple_runs_same_result_sst()
+    # test_point_sst()
+    # print("Current test time: %fs (baseline: %fs)" % (time.time() - st, 21.4076721668))
+    # test_create_multiple_times()
+    # test_py_system_sst()
+    # test_py_system_sst_custom_distance()
+    # test_multiple_runs_same_result_sst()
+    test_sst_custom_goal_predicate()
     print('Passed all tests!')

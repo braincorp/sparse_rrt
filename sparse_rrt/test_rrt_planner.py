@@ -1,5 +1,5 @@
-
-import _sst_module
+from sparse_rrt.distance_functions import DistanceGoalSphere
+from sparse_rrt.planners import RRT
 from sparse_rrt.systems import standard_cpp_systems
 import numpy as np
 import time
@@ -15,13 +15,14 @@ def test_point_rrt():
     '''
     system = standard_cpp_systems.Point()
 
-    planner = _sst_module.RRTWrapper(
+    planner = RRT(
         state_bounds=system.get_state_bounds(),
         control_bounds=system.get_control_bounds(),
         distance=system.distance_computer(),
         start_state=np.array([0., 0.]),
-        goal_state=np.array([9., 9.]),
-        goal_radius=0.5,
+        goal_predicate=DistanceGoalSphere(system.distance_computer(),
+                                          goal_state=np.array([9., 9.]),
+                                          goal_radius=0.5),
         random_seed=0
     )
 
@@ -80,13 +81,14 @@ def test_create_multiple_times_rrt():
     system = standard_cpp_systems.CartPole()
     planners = []
     for i in range(100):
-        planner = _sst_module.RRTWrapper(
+        planner = RRT(
             state_bounds=system.get_state_bounds(),
             control_bounds=system.get_control_bounds(),
             distance=system.distance_computer(),
             start_state=np.array([-20, 0, 3.14, 0]),
-            goal_state=np.array([20, 0, 3.14, 0]),
-            goal_radius=1.5,
+            goal_predicate=DistanceGoalSphere(system.distance_computer(),
+                                              goal_state=np.array([20, 0, 3.14, 0]),
+                                              goal_radius=1.5),
             random_seed=0
         )
         min_time_steps = 10
@@ -102,13 +104,14 @@ def test_py_system_rrt():
 
     system = Point()
 
-    planner = _sst_module.RRTWrapper(
+    planner = RRT(
         state_bounds=system.get_state_bounds(),
         control_bounds=system.get_control_bounds(),
         distance=system.distance_computer(),
         start_state=np.array([0.2, 0.1]),
-        goal_state=np.array([5., 5.]),
-        goal_radius=1.5,
+        goal_predicate=DistanceGoalSphere(system.distance_computer(),
+                                          goal_state=np.array([5., 5.]),
+                                          goal_radius=1.5),
         random_seed=0
     )
 
@@ -128,14 +131,15 @@ def test_py_system_rrt_custom_distance():
 
     system = Acrobot()
 
-    planner = _sst_module.RRTWrapper(
+    planner = RRT(
         state_bounds=system.get_state_bounds(),
         control_bounds=system.get_control_bounds(),
         # use custom distance computer
         distance=AcrobotDistance(),
         start_state=np.array([0., 0., 0., 0.]),
-        goal_state=np.array([np.pi, 0., 0., 0.]),
-        goal_radius=2.,
+        goal_predicate=DistanceGoalSphere(AcrobotDistance(),
+                                          goal_state=np.array([np.pi, 0., 0., 0.]),
+                                          goal_radius=2.),
         random_seed=0
     )
 
@@ -155,13 +159,14 @@ def test_multiple_runs_same_result():
     system = standard_cpp_systems.Point()
 
     def _create_planner():
-        return _sst_module.RRTWrapper(
+        return RRT(
             state_bounds=system.get_state_bounds(),
             control_bounds=system.get_control_bounds(),
             distance=system.distance_computer(),
             start_state=np.array([0., 0.]),
-            goal_state=np.array([9., 9.]),
-            goal_radius=0.5,
+            goal_predicate=DistanceGoalSphere(AcrobotDistance(),
+                                              goal_state=np.array([9., 9.]),
+                                              goal_radius=0.5),
             random_seed=0
         )
 

@@ -49,6 +49,15 @@ def test_goal_predicate():
     assert goal_predicate.reached_goal([2., -1.])
     assert not goal_predicate.reached_goal([1.9, -1.])
 
+    # goal predicate that ignores the second coordinate
+    goal_predicate = DistanceGoalSphere(euclidean_distance([False, False], weights=[1., 0.]), [2., -2.], 1.)
+
+    assert not goal_predicate.reached_goal([0., 0.])
+    assert goal_predicate.reached_goal([2., 0.])
+    assert goal_predicate.reached_goal([2., -2.])
+    assert goal_predicate.reached_goal([2., -1.])
+    assert goal_predicate.reached_goal([1.9, -1.])
+
 
 if __name__ == '__main__':
     test_euclidean_distance_flat()

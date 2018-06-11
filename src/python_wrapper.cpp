@@ -115,7 +115,6 @@ public:
 	 */
     bool reached_goal(const double* point, unsigned int state_dimension) const override
     {
-        std::cout << "trampoline" << std::endl;
         // Copy cpp points to numpy array
         py::safe_array<double> point_array{{state_dimension}};
         std::copy(point, point + state_dimension, point_array.mutable_data(0));
@@ -159,10 +158,19 @@ private:
  * @details Python wrapper for planner_t class that handles numpy arguments and passes them to cpp functions
  *
  */
-class PlannerWrapper
+class __attribute__ ((visibility ("hidden"))) PlannerWrapper
 {
 public:
 
+    PlannerWrapper(
+        py::object distance_computer_py,
+        py::object goal_predicate_py
+    )
+        : _distance_computer_py(distance_computer_py)  // capture distance computer to avoid segfaults because we use a raw pointer from it
+        , _goal_predicate_py(goal_predicate_py)
+    {
+
+    }
     /**
 	 * @copydoc planner_t::step()
 	 */
@@ -287,6 +295,15 @@ protected:
 	 * @brief Created planner object
 	 */
     std::unique_ptr<planner_t> planner;
+
+	/**
+	 * @brief Captured distance computer python object to prevent its premature death
+	 */
+    py::object  _distance_computer_py;
+     /**
+	 * @brief Captured goal predicate python object to prevent its premature death
+	 */
+    py::object  _goal_predicate_py;
 };
 
 
@@ -307,8 +324,7 @@ public:
 	 * @param control_bounds_array numpy array (N x 2) with boundaries of the control space (min and max)
 	 * @param distance_computer_py Python wrapper of distance_t implementation
 	 * @param start_state_array The start state (numpy array)
-	 * @param goal_state_array The goal state  (numpy array)
-	 * @param goal_radius The radial size of the goal region centered at in_goal.
+	 * @param goal_predicate_py Python wrapper of goal_predicate_t implementation (determines when the planner reached the goal)
 	 * @param random_seed The seed for the random generator
 	 * @param sst_delta_near Near distance threshold for SST
 	 * @param sst_delta_drain Drain distance threshold for SST
@@ -318,28 +334,20 @@ public:
             const py::safe_array<double> &control_bounds_array,
             py::object distance_computer_py,
             const py::safe_array<double> &start_state_array,
-            const py::safe_array<double> &goal_state_array,
-            double goal_radius,
+            py::object goal_predicate_py,
             unsigned int random_seed,
             double sst_delta_near,
             double sst_delta_drain
     )
-        : _distance_computer_py(distance_computer_py)  // capture distance computer to avoid segfaults because we use a raw pointer from it
+        : PlannerWrapper(distance_computer_py, goal_predicate_py)
     {
         if (state_bounds_array.shape()[0] != start_state_array.shape()[0]) {
             throw std::domain_error("State bounds and start state arrays have to be equal size");
         }
 
-        if (state_bounds_array.shape()[0] != goal_state_array.shape()[0]) {
-            throw std::domain_error("State bounds and goal state arrays have to be equal size");
-        }
-
-        distance_t* distance_computer = distance_computer_py.cast<distance_t*>();
-
         auto state_bounds = state_bounds_array.unchecked<2>();
         auto control_bounds = control_bounds_array.unchecked<2>();
         auto start_state = start_state_array.unchecked<1>();
-        auto goal_state = goal_state_array.unchecked<1>();
 
         typedef std::pair<double, double> bounds_t;
         std::vector<bounds_t> state_bounds_v;
@@ -353,33 +361,28 @@ public:
             control_bounds_v.push_back(bounds_t(control_bounds(i, 0), control_bounds(i, 1)));
         }
 
+        distance_t* distance_computer = distance_computer_py.cast<distance_t*>();
         std::function<double(const double*, const double*, unsigned int)>  distance_f =
             [distance_computer] (const double* p0, const double* p1, unsigned int dims) {
                 return distance_computer->distance(p0, p1, dims);
             };
 
-        std::vector<double> goal_state_v(goal_state_array.shape()[0]);
-        std::copy(&goal_state(0), &goal_state(0) + goal_state_array.shape()[0], &goal_state_v[0]);
-        std::function<bool(const double*, unsigned int)> goal_predicate =
-            [=] (const double* p, unsigned int dims) {
-                return distance_computer->distance(&goal_state_v[0], p, dims) < goal_radius;
+        goal_predicate_t* goal_predicate = goal_predicate_py.cast<goal_predicate_t*>();
+        std::function<bool(const double*, unsigned int)>  goal_predicate_f =
+            [goal_predicate] (const double* p, unsigned int dims) {
+                return goal_predicate->reached_goal(p, dims);
             };
+
         planner.reset(
                 new sst_t(
                         &start_state(0),
                         state_bounds_v, control_bounds_v,
                         distance_f,
-                        goal_predicate,
+                        goal_predicate_f,
                         random_seed,
                         sst_delta_near, sst_delta_drain)
         );
     }
-private:
-
-	/**
-	 * @brief Captured distance computer python object to prevent its premature death
-	 */
-    py::object  _distance_computer_py;
 };
 
 
@@ -403,23 +406,17 @@ public:
             const py::safe_array<double> &control_bounds_array,
             py::object distance_computer_py,
             const py::safe_array<double> &start_state_array,
-            const py::safe_array<double> &goal_state_array,
-            double goal_radius,
+            py::object goal_predicate_py,
             unsigned int random_seed
-    ) : _distance_computer_py(distance_computer_py)
+    ) : PlannerWrapper(distance_computer_py, goal_predicate_py)
     {
         if (state_bounds_array.shape()[0] != start_state_array.shape()[0]) {
             throw std::runtime_error("State bounds and start state arrays have to be equal size");
         }
 
-        if (state_bounds_array.shape()[0] != goal_state_array.shape()[0]) {
-            throw std::runtime_error("State bounds and goal state arrays have to be equal size");
-        }
-
         auto state_bounds = state_bounds_array.unchecked<2>();
         auto control_bounds = control_bounds_array.unchecked<2>();
         auto start_state = start_state_array.unchecked<1>();
-        auto goal_state = goal_state_array.unchecked<1>();
 
         typedef std::pair<double, double> bounds_t;
         std::vector<bounds_t> state_bounds_v;
@@ -438,11 +435,10 @@ public:
                 return distance_computer->distance(p0, p1, dims);
             };
 
-        std::vector<double> goal_state_v(goal_state_array.shape()[0]);
-        std::copy(&goal_state(0), &goal_state(0) + goal_state_array.shape()[0], &goal_state_v[0]);
-        std::function<bool(const double*, unsigned int)> goal_predicate =
-            [=] (const double* p, unsigned int dims) {
-                return distance_computer->distance(&goal_state_v[0], p, dims) < goal_radius;
+        goal_predicate_t* goal_predicate = goal_predicate_py.cast<goal_predicate_t*>();
+        std::function<bool(const double*, unsigned int)>  goal_predicate_f =
+            [goal_predicate] (const double* p, unsigned int dims) {
+                return goal_predicate->reached_goal(p, dims);
             };
 
         planner.reset(
@@ -450,16 +446,10 @@ public:
                         &start_state(0),
                         state_bounds_v, control_bounds_v,
                         distance_f,
-                        goal_predicate,
+                        goal_predicate_f,
                         random_seed)
         );
     }
-private:
-
-	/**
-	 * @brief Captured distance computer python object to prevent its premature death
-	 */
-    py::object  _distance_computer_py;
 };
 
 
@@ -621,31 +611,12 @@ PYBIND11_MODULE(_sst_module, m) {
         .def("get_number_of_nodes", &PlannerWrapper::get_number_of_nodes)
    ;
 
-   py::class_<RRTWrapper>(m, "RRTWrapper", planner)
-        .def(py::init<const py::safe_array<double>&,
-                      const py::safe_array<double>&,
-                      py::object,
-                      const py::safe_array<double>&,
-                      const py::safe_array<double>&,
-                      double,
-                      unsigned int>(),
-            "state_bounds"_a,
-            "control_bounds"_a,
-            "distance"_a,
-            "start_state"_a,
-            "goal_state"_a,
-            "goal_radius"_a,
-            "random_seed"_a
-        )
-    ;
-
    py::class_<SSTWrapper>(m, "SSTWrapper", planner)
         .def(py::init<const py::safe_array<double>&,
                       const py::safe_array<double>&,
                       py::object,
                       const py::safe_array<double>&,
-                      const py::safe_array<double>&,
-                      double,
+                      py::object,
                       unsigned int,
                       double,
                       double>(),
@@ -653,12 +624,27 @@ PYBIND11_MODULE(_sst_module, m) {
             "control_bounds"_a,
             "distance"_a,
             "start_state"_a,
-            "goal_state"_a,
-            "goal_radius"_a,
+            "goal_predicate"_a,
             "random_seed"_a,
             "sst_delta_near"_a,
             "sst_delta_drain"_a
         )
    ;
+
+   py::class_<RRTWrapper>(m, "RRTWrapper", planner)
+        .def(py::init<const py::safe_array<double>&,
+                      const py::safe_array<double>&,
+                      py::object,
+                      const py::safe_array<double>&,
+                      py::object,
+                      unsigned int>(),
+            "state_bounds"_a,
+            "control_bounds"_a,
+            "distance"_a,
+            "start_state"_a,
+            "goal_predicate"_a,
+            "random_seed"_a
+        )
+    ;
 
 }

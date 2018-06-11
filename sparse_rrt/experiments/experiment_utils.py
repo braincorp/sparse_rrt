@@ -1,6 +1,7 @@
 import numpy as np
 import time
 
+from sparse_rrt.distance_functions import DistanceGoalSphere
 from sparse_rrt.planners import SST, RRT
 from sparse_rrt.systems import create_standard_system
 from sparse_rrt.visualization import show_image
@@ -32,14 +33,23 @@ def run_config(config):
     if 'distance_computer' not in config:
         config['distance_computer'] = system.distance_computer()
 
+    if 'goal_predicate' not in config:
+        config['goal_predicate'] = DistanceGoalSphere(
+            config['distance_computer'],
+            goal_state=config['goal_state'],
+            goal_radius=config['goal_radius'],
+        )
+    else:
+        assert 'goal_state' not in config
+        assert 'goal_radius' not in config
+
     if config['planner'] == 'sst':
         planner = SST(
             state_bounds=system.get_state_bounds(),
             control_bounds=system.get_control_bounds(),
             distance=config['distance_computer'],
             start_state=config['start_state'],
-            goal_state=config['goal_state'],
-            goal_radius=config['goal_radius'],
+            goal_predicate=config['goal_predicate'],
             random_seed=config['random_seed'],
             sst_delta_near=float(config['sst_delta_near']),
             sst_delta_drain=float(config['sst_delta_drain'])
@@ -50,8 +60,7 @@ def run_config(config):
             control_bounds=system.get_control_bounds(),
             distance=config['distance_computer'],
             start_state=config['start_state'],
-            goal_state=config['goal_state'],
-            goal_radius=config['goal_radius'],
+            goal_predicate=config['goal_predicate'],
             random_seed=config['random_seed'],
         )
     else:

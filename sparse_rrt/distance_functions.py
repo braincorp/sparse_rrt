@@ -16,4 +16,12 @@ def euclidean_distance(is_circular_topology, weights=None):
 
 
 class DistanceGoalSphere(_sst_module.DistanceGoalSphere):
-    pass
+    def __init__(self, distance_computer, goal_state, goal_radius):
+        '''
+        Create the most common goal predicate -
+        goal is reached if distance between the state and the goal point is withing the radius
+        :param distance_computer: an object that computes distance for the system
+        :param goal_state: goal state point
+        :param goal_radius: radius around goal state point
+        '''
+        _sst_module.DistanceGoalSphere.__init__(self, distance_computer, goal_state, goal_radius)
