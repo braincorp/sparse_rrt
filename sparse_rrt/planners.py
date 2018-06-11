@@ -37,11 +37,65 @@ class SST(visualize_wrapper(_sst_module.SSTWrapper)):
     '''
     Sparse stable trees planner
     '''
-    pass
+    def __init__(
+        self,
+        state_bounds,
+        control_bounds,
+        distance,
+        start_state,
+        goal_predicate,
+        random_seed,
+        sst_delta_near,
+        sst_delta_drain):
+        '''
+        Construct SST
+        :param state_bounds: numpy array (N x 2) with boundaries of the state space (min and max)
+        :param control_bounds: numpy array (N x 2) with boundaries of the control space (min and max)
+        :param distance: an instance of IDistance to compute distance between state points
+        :param start_state: the start state (numpy array)
+        :param goal_predicate: an instance of IGoalPredicate to determine when the system reaches the goal
+        :param random_seed: seed for the random generator
+        :param sst_delta_near: near distance threshold for SST
+        :param sst_delta_drain: drain distance threshold for SST
+        '''
+        super(SST, self).__init__(
+            state_bounds=state_bounds,
+            control_bounds=control_bounds,
+            distance=distance,
+            start_state=start_state,
+            goal_predicate=goal_predicate,
+            random_seed=random_seed,
+            sst_delta_near=sst_delta_near,
+            sst_delta_drain=sst_delta_drain
+        )
 
 
 class RRT(visualize_wrapper(_sst_module.RRTWrapper)):
     '''
     RRT planner (baseline)
     '''
-    pass
+    def __init__(
+        self,
+        state_bounds,
+        control_bounds,
+        distance,
+        start_state,
+        goal_predicate,
+        random_seed):
+        '''
+        Construct RRT
+        :param state_bounds: numpy array (N x 2) with boundaries of the state space (min and max)
+        :param control_bounds: numpy array (N x 2) with boundaries of the control space (min and max)
+        :param distance: an instance of IDistance to compute distance between state points
+        :param start_state: the start state (numpy array)
+        :param goal_predicate: an instance of IGoalPredicate to determine when the system reaches the goal
+        :param random_seed: seed for the random generator
+        '''
+        super(RRT, self).__init__(
+            state_bounds=state_bounds,
+            control_bounds=control_bounds,
+            distance=distance,
+            start_state=start_state,
+            goal_predicate=goal_predicate,
+            random_seed=random_seed
+        )
