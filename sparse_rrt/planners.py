@@ -81,6 +81,13 @@ class SST(visualize_wrapper(_sst_module.SSTWrapper)):
         '''
         return super(SST, self).get_solution()
 
+    def get_number_of_nodes(self):
+        '''
+        Return number of nodes in the planning tree
+        :return: Int, number of nodes in the planning tree
+        '''
+        return super(SST, self).get_number_of_nodes()
+
 
 class RRT(visualize_wrapper(_sst_module.RRTWrapper)):
     '''
@@ -123,3 +130,10 @@ class RRT(visualize_wrapper(_sst_module.RRTWrapper)):
                 - costs: cummulative costs along the path (costs[-1] corresponds to the cost of the whole path)
         '''
         return super(RRT, self).get_solution()
+
+    def get_number_of_nodes(self):
+        '''
+        Return number of nodes in the planning tree
+        :return: Int, number of nodes in the planning tree
+        '''
+        return super(RRT, self).get_number_of_nodes()
