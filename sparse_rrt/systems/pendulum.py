@@ -30,7 +30,7 @@ class Pendulum(BaseSystem):
             elif state[0] > np.pi:
                 state[0] -= 2 * np.pi
             state = np.clip(state, [self.MIN_ANGLE, self.MIN_W], [self.MAX_ANGLE, self.MAX_W])
-        return state
+        return state, num_steps*integration_step
 
     def visualize_point(self, state):
         x = (state[0] + np.pi) / (2*np.pi)

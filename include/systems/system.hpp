@@ -36,9 +36,9 @@ struct system_interface {
 	 * @param max_step The largest number of simulation steps to execute.
 	 * @param result_state The result of the propagation.
 	 * @param duration The amount of simulation time used.
-	 * @return True if this propagation was valid, false if not.
+	 * @return Cost of this propagation. Returns nan if this propagation was not valid (e.g. collision)
 	 */
-    virtual bool propagate(
+    virtual double propagate(
         const double* start_state, unsigned int state_dimension,
         const double* control, unsigned int control_dimension,
         int num_steps, double* result_state, double integration_step) = 0;

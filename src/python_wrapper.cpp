@@ -16,6 +16,7 @@
 #include <pybind11/functional.h>
 
 #include <iostream>
+#include <limits>
 #include "utilities/runtime_assert.hpp"
 
 #include "systems/point.hpp"
@@ -472,7 +473,7 @@ public:
 	/**
 	 * @copydoc system_interface::propagate()
 	 */
-    bool propagate(
+    double propagate(
         const double* start_state, unsigned int state_dimension,
         const double* control, unsigned int control_dimension,
         int num_steps,
@@ -488,16 +489,22 @@ public:
         py::function overload = py::get_overload(static_cast<const system_interface *>(this), "propagate");
         if (!overload) {
             pybind11::pybind11_fail("Tried to call pure virtual function propagate");
-            return false;
+            return std::numeric_limits<double>::quiet_NaN();;
         }
 
         auto result = overload(start_state_array, control_array, num_steps, integration_step);
-        if (py::isinstance<py::none>(result)) {
-            return false;
+        if (py::isinstance<py::none>(std::move(result))) {
+            return std::numeric_limits<double>::quiet_NaN();;
         } else {
-            auto result_state_array = py::detail::cast_safe<py::safe_array<double>>(std::move(result));
+            if (!py::isinstance<py::tuple>(std::move(result))) {
+                throw std::domain_error("System did not returned a tuple with (state, cost) or None");
+            }
+            auto result_tuple = py::detail::cast_safe<py::tuple>(std::move(result));
+            auto result_state_array = py::detail::cast_safe<py::safe_array<double>>(std::move(result_tuple[0]));
             std::copy(result_state_array.data(0), result_state_array.data(0) + state_dimension, result_state);
-            return true;
+
+            auto result_cost = py::detail::cast_safe<double>(std::move(result_tuple[1]));
+            return result_cost;
         }
     }
 

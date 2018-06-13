@@ -49,7 +49,7 @@ class Point(BaseSystem):
                 return None
 
         state = np.clip(trajectory[-1], [self.MIN_X, self.MIN_Y], [self.MAX_X, self.MAX_Y])
-        return state
+        return state, num_steps*integration_step
 
     def visualize_point(self, state):
         x = (state[0] - self.MIN_X) / (self.MAX_X - self.MIN_X)

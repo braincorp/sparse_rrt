@@ -57,7 +57,7 @@ class Acrobot(BaseSystem):
                 state[2:],
                 [self.MIN_V_1, self.MIN_V_2],
                 [self.MAX_V_1, self.MAX_V_2])
-        return state
+        return state, num_steps*integration_step
 
     def visualize_point(self, state):
         x = self.LENGTH * np.cos(state[self.STATE_THETA_1] - np.pi / 2) + self.LENGTH * np.cos(state[self.STATE_THETA_1] + state[self.STATE_THETA_2] - np.pi/2)

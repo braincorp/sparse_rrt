@@ -21,6 +21,7 @@
 
 
 #include <cmath>
+#include <limits>
 
 
 #define I 10
@@ -43,31 +44,33 @@
 #define MAX_W 2
 
 
-bool cart_pole_t::propagate(
+double cart_pole_t::propagate(
     const double* start_state, unsigned int state_dimension,
     const double* control, unsigned int control_dimension,
     int num_steps, double* result_state, double integration_step)
 {
-        temp_state[0] = start_state[0]; 
-        temp_state[1] = start_state[1];
-        temp_state[2] = start_state[2];
-        temp_state[3] = start_state[3];
-        bool validity = true;
-        for(int i=0;i<num_steps;i++)
-        {
-                update_derivative(control);
-                temp_state[0] += integration_step*deriv[0];
-                temp_state[1] += integration_step*deriv[1];
-                temp_state[2] += integration_step*deriv[2];
-                temp_state[3] += integration_step*deriv[3];
-                enforce_bounds();
-                validity = validity && valid_state();
+    temp_state[0] = start_state[0];
+    temp_state[1] = start_state[1];
+    temp_state[2] = start_state[2];
+    temp_state[3] = start_state[3];
+    for(int i=0;i<num_steps;i++)
+    {
+        update_derivative(control);
+        temp_state[0] += integration_step*deriv[0];
+        temp_state[1] += integration_step*deriv[1];
+        temp_state[2] += integration_step*deriv[2];
+        temp_state[3] += integration_step*deriv[3];
+        enforce_bounds();
+        if (!valid_state()) {
+            return std::numeric_limits<double>::quiet_NaN();
         }
-        result_state[0] = temp_state[0];
-        result_state[1] = temp_state[1];
-        result_state[2] = temp_state[2];
-        result_state[3] = temp_state[3];
-        return validity;
+    }
+    result_state[0] = temp_state[0];
+    result_state[1] = temp_state[1];
+    result_state[2] = temp_state[2];
+    result_state[3] = temp_state[3];
+    double duration = num_steps*integration_step;
+    return duration;
 }
 
 void cart_pole_t::enforce_bounds()

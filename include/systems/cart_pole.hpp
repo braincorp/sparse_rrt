@@ -34,9 +34,9 @@ public:
 	}
 
 	/**
-	 * @copydoc system_t::propagate(const double*, const double*, int, int, double*, double& )
+	 * @copydoc system_t::propagate()
 	 */
-	virtual bool propagate(
+	virtual double propagate(
 	    const double* start_state, unsigned int state_dimension,
         const double* control, unsigned int control_dimension,
 	    int num_steps, double* result_state, double integration_step);

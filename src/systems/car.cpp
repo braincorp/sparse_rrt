@@ -19,16 +19,16 @@
 #define _USE_MATH_DEFINES
 
 #include <cmath>
+#include <limits>
 
 
-bool car_t::propagate(
+double car_t::propagate(
     const double* start_state, unsigned int state_dimension,
     const double* control, unsigned int control_dimension,
     int num_steps, double* result_state, double integration_step)
 {
 	temp_state[0] = start_state[0]; temp_state[1] = start_state[1];temp_state[2] = start_state[2];
 
-	bool validity = true;
 	for(int i=0;i<num_steps;i++)
 	{
 		double temp2 = temp_state[2];
@@ -36,12 +36,15 @@ bool car_t::propagate(
 		temp_state[1] += integration_step*sin(temp2)*control[0];
 		temp_state[2] += integration_step*control[1];
 		enforce_bounds();
-		validity = validity && valid_state();
+		if (!valid_state()) {
+		    return std::numeric_limits<double>::quiet_NaN();
+		}
 	}
 	result_state[0] = temp_state[0];
 	result_state[1] = temp_state[1];
 	result_state[2] = temp_state[2];
-	return validity;
+	double duration = num_steps*integration_step;
+	return duration;
 }
 
 void car_t::enforce_bounds()

@@ -22,6 +22,7 @@
 
 
 #include <cmath>
+#include <limits>
 
 #define M 1450
 #define IZ 2740
@@ -79,43 +80,45 @@
 //}
 
 
-bool rally_car_t::propagate(
+double rally_car_t::propagate(
     const double* start_state, unsigned int state_dimension,
     const double* control, unsigned int control_dimension,
     int num_steps, double* result_state, double integration_step)
 {
-        temp_state[0] = start_state[0]; 
-        temp_state[1] = start_state[1];
-        temp_state[2] = start_state[2];
-        temp_state[3] = start_state[3];
-        temp_state[4] = start_state[4];
-        temp_state[5] = start_state[5];
-        temp_state[6] = start_state[6];
-        temp_state[7] = start_state[7];
-        bool validity = true;
-        for(int i=0;i<num_steps;i++)
-        {
-                update_derivative(control);
-                temp_state[0] += integration_step*deriv[0];
-                temp_state[1] += integration_step*deriv[1];
-                temp_state[2] += integration_step*deriv[2];
-                temp_state[3] += integration_step*deriv[3];
-                temp_state[4] += integration_step*deriv[4];
-                temp_state[5] += integration_step*deriv[5];
-                temp_state[6] += integration_step*deriv[6];
-                temp_state[7] += integration_step*deriv[7];
-                enforce_bounds();
-                validity = validity && valid_state();
+    temp_state[0] = start_state[0];
+    temp_state[1] = start_state[1];
+    temp_state[2] = start_state[2];
+    temp_state[3] = start_state[3];
+    temp_state[4] = start_state[4];
+    temp_state[5] = start_state[5];
+    temp_state[6] = start_state[6];
+    temp_state[7] = start_state[7];
+    for(int i=0;i<num_steps;i++)
+    {
+        update_derivative(control);
+        temp_state[0] += integration_step*deriv[0];
+        temp_state[1] += integration_step*deriv[1];
+        temp_state[2] += integration_step*deriv[2];
+        temp_state[3] += integration_step*deriv[3];
+        temp_state[4] += integration_step*deriv[4];
+        temp_state[5] += integration_step*deriv[5];
+        temp_state[6] += integration_step*deriv[6];
+        temp_state[7] += integration_step*deriv[7];
+        enforce_bounds();
+        if (!valid_state()) {
+            return std::numeric_limits<double>::quiet_NaN();
         }
-        result_state[0] = temp_state[0];
-        result_state[1] = temp_state[1];
-        result_state[2] = temp_state[2];
-        result_state[3] = temp_state[3];
-        result_state[4] = temp_state[4];
-        result_state[5] = temp_state[5];
-        result_state[6] = temp_state[6];
-        result_state[7] = temp_state[7];
-        return validity;
+    }
+    result_state[0] = temp_state[0];
+    result_state[1] = temp_state[1];
+    result_state[2] = temp_state[2];
+    result_state[3] = temp_state[3];
+    result_state[4] = temp_state[4];
+    result_state[5] = temp_state[5];
+    result_state[6] = temp_state[6];
+    result_state[7] = temp_state[7];
+    double duration = num_steps*integration_step;
+    return duration;
 }
 
 void rally_car_t::enforce_bounds()

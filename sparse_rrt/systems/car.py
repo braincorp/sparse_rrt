@@ -35,7 +35,7 @@ class Car(BaseSystem):
         state[1] = start_state[1] + np.sum(sins)
         state[2] = angles[-1]
         state = np.clip(state, [self.MIN_X, self.MIN_Y, self.MIN_ANGLE], [self.MAX_X, self.MAX_Y, self.MAX_ANGLE])
-        return state
+        return state, num_steps*integration_step
 
     def visualize_point(self, state):
         x = (state[0] - self.MIN_X) / (self.MAX_X - self.MIN_X)

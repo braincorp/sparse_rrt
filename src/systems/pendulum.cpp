@@ -19,6 +19,7 @@
 #define _USE_MATH_DEFINES
 
 #include <cmath>
+#include <limits>
 
 #define MIN_W -7
 #define MAX_W 7
@@ -31,13 +32,12 @@
 #define DAMPING .05
 
 
-bool pendulum_t::propagate(
+double pendulum_t::propagate(
     const double* start_state, unsigned int state_dimension,
     const double* control, unsigned int control_dimension,
     int num_steps, double* result_state, double integration_step)
 {
 	temp_state[0] = start_state[0]; temp_state[1] = start_state[1];
-	bool validity = true;
 	for(int i=0;i<num_steps;i++)
 	{
 		double temp0 = temp_state[0];
@@ -47,11 +47,14 @@ bool pendulum_t::propagate(
 							((control[0] - MASS * (9.81) * LENGTH * cos(temp0)*0.5 
 										 - DAMPING * temp1)* 3 / (MASS * LENGTH * LENGTH));
 		enforce_bounds();
-		validity = validity && valid_state();
+		if (!valid_state()) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
 	}
 	result_state[0] = temp_state[0];
 	result_state[1] = temp_state[1];
-	return validity;
+	double duration = integration_step*num_steps;
+	return duration;
 }
 
 void pendulum_t::enforce_bounds()

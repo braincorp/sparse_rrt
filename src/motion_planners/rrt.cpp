@@ -36,16 +36,21 @@ void rrt_t::step(system_interface* system, int min_time_steps, int max_time_step
     double distance;
     rrt_node_t* nearest = (rrt_node_t*)metric.find_closest(sample_state, &distance)->get_state();
     int num_steps = this->random_generator.uniform_int_random(min_time_steps, max_time_steps);
-    double duration = num_steps*integration_step;
-    if(system->propagate(
-        nearest->get_point(), this->state_dimension, sample_control, this->control_dimension,
-        num_steps, sample_state, integration_step))
+
+    double cost = system->propagate(
+        nearest->get_point(), this->state_dimension,
+        sample_control, this->control_dimension,
+        num_steps,
+        sample_state, integration_step
+    );
+    if (!isnan(cost))
     {
         //create a new tree node
+        double duration = num_steps*integration_step;
         rrt_node_t* new_node = static_cast<rrt_node_t*>(nearest->add_child(new rrt_node_t(
             sample_state, this->state_dimension, nearest,
             tree_edge_t(sample_control, this->control_dimension, duration),
-            nearest->get_cost() + duration)
+            nearest->get_cost() + cost)
         ));
         metric.add_node(new_node);
         number_of_nodes++;

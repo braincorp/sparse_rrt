@@ -16,6 +16,7 @@
 #include "utilities/random.hpp"
 #include "image_creation/svg_image.hpp"
 #include <cmath>
+#include <limits>
 #include <assert.h>
 
 #define MIN_X -10
@@ -29,24 +30,26 @@
 #define MAX_THETA 3.14
 
 
-bool point_t::propagate(
+double point_t::propagate(
     const double* start_state, unsigned int state_dimension,
     const double* control, unsigned int control_dimension,
     int num_steps, double* result_state, double integration_step)
 {
 	temp_state[0] = start_state[0];
 	temp_state[1] = start_state[1];
-	bool validity = true;
 	for(int i=0;i<num_steps;i++)
 	{
 		temp_state[0] += integration_step*control[0]*cos(control[1]);
 		temp_state[1] += integration_step*control[0]*sin(control[1]);
 		enforce_bounds();
-		validity = validity && valid_state();
+		if (!valid_state()) {
+            return std::numeric_limits<double>::quiet_NaN();
+        }
 	}
 	result_state[0] = temp_state[0];
 	result_state[1] = temp_state[1];
-	return validity;
+	double duration = integration_step*num_steps;
+	return duration;
 }
 
 void point_t::enforce_bounds()

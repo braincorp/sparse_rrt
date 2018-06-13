@@ -35,7 +35,10 @@ class ISystem(sparse_rrt._sst_module.ISystem):
         :param control: numpy vector of (control_dimensions,)
         :param num_steps: int of number of steps to integrate under the constant control
         :param integration_step: time step for integration
-        :return: boolean indicating that integration is successful (e.g. it should return False if collision is detected)
+        :return: either
+            - None: indicating that integration was not is successful (e.g. if collision is detected)
+            - a tuple (new_state, cost): where 'new_state' is the state of the system after integration
+            and 'cost' is cost of transition (e.g. duration of the transition)
         '''
         raise NotImplementedError()
 

@@ -105,11 +105,13 @@ void sst_t::step(system_interface* system, int min_time_steps, int max_time_step
     sst_node_t* nearest = nearest_vertex(sample_state);
 	int num_steps = this->random_generator.uniform_int_random(min_time_steps, max_time_steps);
     double duration = num_steps*integration_step;
-	if(system->propagate(
+	double cost = system->propagate(
 	    nearest->get_point(), this->state_dimension, sample_control, this->control_dimension,
-	    num_steps, sample_state, integration_step))
+	    num_steps, sample_state, integration_step);
+
+	if(!isnan(cost))
 	{
-		add_to_tree(sample_state, sample_control, nearest, duration);
+		add_to_tree(sample_state, sample_control, nearest, duration, cost);
 	}
     delete sample_state;
     delete sample_control;
@@ -136,15 +138,15 @@ sst_node_t* sst_t::nearest_vertex(const double* sample_state)
     return nearest;
 }
 
-void sst_t::add_to_tree(const double* sample_state, const double* sample_control, sst_node_t* nearest, double duration)
+void sst_t::add_to_tree(const double* sample_state, const double* sample_control, sst_node_t* nearest, double duration, double cost)
 {
 	//check to see if a sample exists within the vicinity of the new node
     sample_node_t* witness_sample = find_witness(sample_state);
 
     sst_node_t* representative = witness_sample->get_representative();
-	if(representative==NULL || representative->get_cost() > nearest->get_cost() + duration)
+	if(representative==NULL || representative->get_cost() > nearest->get_cost() + cost)
 	{
-		if(best_goal==NULL || nearest->get_cost() + duration <= best_goal->get_cost())
+		if(best_goal==NULL || nearest->get_cost() + cost <= best_goal->get_cost())
 		{
 			//create a new tree node
 			//set parent's child
@@ -153,7 +155,7 @@ void sst_t::add_to_tree(const double* sample_state, const double* sample_control
                     sample_state, this->state_dimension,
                     nearest,
                     tree_edge_t(sample_control, this->control_dimension, duration),
-                    nearest->get_cost() + duration)
+                    nearest->get_cost() + cost)
             ));
 			number_of_nodes++;
 
