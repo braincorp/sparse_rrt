@@ -54,24 +54,24 @@ def test_point_rrt():
             if solution is None:
                 solution_cost = None
                 assert(expected_solution_cost is None)
-                assert (expected_number_of_nodes == planner.get_number_of_nodes())
             else:
-                solution_cost = np.sum(solution[2])
-                assert(abs(solution_cost - expected_solution_cost) < 1e-6)
-                assert (expected_number_of_nodes == planner.get_number_of_nodes())
+                _, _, durations, costs = solution
+                solution_cost = costs[-1]
+                # in this system, costs are equal to cumulative durations
+                np.testing.assert_almost_equal(np.sum(durations), costs[-1])
+                np.testing.assert_almost_equal(solution_cost, expected_solution_cost)
 
             print("Time: %.2fs, Iterations: %d, Nodes: %d, Solution Quality: %s" %
                   (time.time() - start_time, iteration, planner.get_number_of_nodes(), solution_cost))
 
-    path, controls, costs = planner.get_solution()
-    solution_cost = np.sum(costs)
+    path, controls, durations, costs = planner.get_solution()
 
     print("Time: %.2fs, Iterations: %d, Nodes: %d, Solution Quality: %f" %
-          (time.time() - start_time, number_of_iterations, planner.get_number_of_nodes(), solution_cost))
+          (time.time() - start_time, number_of_iterations, planner.get_number_of_nodes(), costs[-1]))
 
     expected_number_of_nodes, expected_solution_cost = expected_results['final']
     assert(planner.get_number_of_nodes() == expected_number_of_nodes)
-    assert(abs(solution_cost - expected_solution_cost) < 1e-9)
+    np.testing.assert_almost_equal(costs[-1], expected_solution_cost)
 
 
 def test_create_multiple_times_rrt():

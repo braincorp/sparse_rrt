@@ -18,7 +18,11 @@
 #include <deque>
 
 
-void planner_t::get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs)
+void planner_t::get_solution(
+    std::vector<std::vector<double>>& solution_path,
+    std::vector<std::vector<double>>& controls,
+    std::vector<double>& durations,
+    std::vector<double>& costs)
 {
 	if(this->best_goal==NULL)
 		return;
@@ -51,6 +55,7 @@ void planner_t::get_solution(std::vector<std::vector<double>>& solution_path, st
             current_control.push_back(path[i]->get_parent_edge().get_control()[c]);
         }
         controls.push_back(current_control);
-        costs.push_back(path[i]->get_parent_edge().get_duration());
+        durations.push_back(path[i]->get_parent_edge().get_duration());
+        costs.push_back(path[i]->get_cost());
 	}
 }

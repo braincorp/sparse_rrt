@@ -140,7 +140,7 @@ def run_planning_experiment(
             if solution is None:
                 solution_cost = None
             else:
-                solution_cost = np.sum(solution[2])
+                solution_cost = np.sum(solution[3])
 
             visualization_start_time = time.time()
             im = _display_begin(planner, system)
@@ -158,7 +158,7 @@ def run_planning_experiment(
 
     solution = planner.get_solution()
     if solution is not None:
-        path, controls, costs = planner.get_solution()
+        path, controls, durations, costs = solution
         solution_cost = np.sum(costs)
 
         print("Time: %.2fs, Iterations: %d, Nodes: %d, Solution Quality: %s" %

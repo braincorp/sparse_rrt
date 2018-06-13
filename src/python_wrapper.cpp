@@ -201,8 +201,9 @@ public:
     {
         std::vector<std::vector<double>> solution_path;
         std::vector<std::vector<double>> controls;
+        std::vector<double> durations;
         std::vector<double> costs;
-        planner->get_solution(solution_path, controls, costs);
+        planner->get_solution(solution_path, controls, durations, costs);
 
         using namespace std::placeholders;
         std::string document_body = visualize_tree(
@@ -235,8 +236,9 @@ public:
     {
         std::vector<std::vector<double>> solution_path;
         std::vector<std::vector<double>> controls;
+        std::vector<double> durations;
         std::vector<double> costs;
-        planner->get_solution(solution_path, controls, costs);
+        planner->get_solution(solution_path, controls, durations, costs);
 
         using namespace std::placeholders;
         std::string document_body = visualize_nodes(
@@ -254,22 +256,26 @@ public:
     py::object get_solution() {
         std::vector<std::vector<double>> solution_path;
         std::vector<std::vector<double>> controls;
+        std::vector<double> durations;
         std::vector<double> costs;
-        planner->get_solution(solution_path, controls, costs);
+        planner->get_solution(solution_path, controls, durations, costs);
 
         if (controls.size() == 0) {
             return py::none();
         }
 
         py::safe_array<double> controls_array({controls.size(), controls[0].size()});
+        py::safe_array<double> durations_array({costs.size()});
         py::safe_array<double> costs_array({costs.size()});
         auto controls_ref = controls_array.mutable_unchecked<2>();
+        auto durations_ref = durations_array.mutable_unchecked<1>();
         auto costs_ref = costs_array.mutable_unchecked<1>();
         for (unsigned int i = 0; i < controls.size(); ++i) {
             for (unsigned int j = 0; j < controls[0].size(); ++j) {
                 controls_ref(i, j) = controls[i][j];
             }
             costs_ref(i) = costs[i];
+            durations_ref(i) = durations[i];
         }
 
         py::safe_array<double> state_array({solution_path.size(), solution_path[0].size()});
@@ -279,8 +285,8 @@ public:
                 state_ref(i, j) = solution_path[i][j];
             }
         }
-        return py::cast(std::tuple<py::safe_array<double>, py::safe_array<double>, py::safe_array<double>>
-            (state_array, controls_array, costs_array));
+        return py::cast(std::tuple<py::safe_array<double>, py::safe_array<double>, py::safe_array<double>, py::safe_array<double>>
+            (state_array, controls_array, durations_array, costs_array));
     }
 
     /**

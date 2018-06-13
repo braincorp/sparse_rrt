@@ -69,6 +69,18 @@ class SST(visualize_wrapper(_sst_module.SSTWrapper)):
             sst_delta_drain=sst_delta_drain
         )
 
+    def get_solution(self):
+        '''
+        Get current solution of the planning problem
+        :return: either None - no solution is found so far or
+            a tuple with:
+                - state_trajectory: state trajectory for the solution
+                - controls: control signals along the trajectory
+                - durations:duration of control signals (in seconds! divide by dt to get number of steps)
+                - costs: cummulative costs along the path (costs[-1] corresponds to the cost of the whole path)
+        '''
+        return super(SST, self).get_solution()
+
 
 class RRT(visualize_wrapper(_sst_module.RRTWrapper)):
     '''
@@ -99,3 +111,15 @@ class RRT(visualize_wrapper(_sst_module.RRTWrapper)):
             goal_predicate=goal_predicate,
             random_seed=random_seed
         )
+
+    def get_solution(self):
+        '''
+        Get current solution of the planning problem
+        :return: either None - no solution is found so far or
+            a tuple with:
+                - state_trajectory: state trajectory for the solution
+                - controls: control signals along the trajectory
+                - durations:duration of control signals (in seconds! divide by dt to get number of steps)
+                - costs: cummulative costs along the path (costs[-1] corresponds to the cost of the whole path)
+        '''
+        return super(RRT, self).get_solution()

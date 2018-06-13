@@ -75,10 +75,15 @@ public:
 	 * @details Query the tree structure for the solution plan for this given system.
 	 *
 	 * @param solution_path The list of state pointswhich comprise the solution.
+	 * @param durations The list of durations of controls for each transition.
 	 * @param controls The list of controls which comprise the solution.
 	 * @param costs The list of costs of the edges which comprise the solution.
 	 */
-	void get_solution(std::vector<std::vector<double>>& solution_path, std::vector<std::vector<double>>& controls, std::vector<double>& costs);
+	void get_solution(
+	    std::vector<std::vector<double>>& solution_path,
+	    std::vector<std::vector<double>>& controls,
+	    std::vector<double>& durations,
+	    std::vector<double>& costs);
 
 	/**
 	 * @brief Perform an iteration of a motion planning algorithm.
