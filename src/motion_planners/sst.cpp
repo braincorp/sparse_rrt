@@ -109,7 +109,7 @@ void sst_t::step(system_interface* system, int min_time_steps, int max_time_step
 	    nearest->get_point(), this->state_dimension, sample_control, this->control_dimension,
 	    num_steps, sample_state, integration_step);
 
-	if(!isnan(cost))
+	if(!std::isnan(cost))
 	{
 		add_to_tree(sample_state, sample_control, nearest, duration, cost);
 	}

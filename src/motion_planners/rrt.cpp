@@ -43,7 +43,7 @@ void rrt_t::step(system_interface* system, int min_time_steps, int max_time_step
         num_steps,
         sample_state, integration_step
     );
-    if (!isnan(cost))
+    if (!std::isnan(cost))
     {
         //create a new tree node
         double duration = num_steps*integration_step;
