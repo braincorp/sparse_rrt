@@ -30,14 +30,21 @@ def render_svg_pyside(svg_string):
     Render svg file into numpy array using pyside (the fastest implementation)
     https://stackoverflow.com/questions/6589358/convert-svg-to-png-in-python/23093425#23093425
     '''
-    import PySide.QtSvg
-    import PySide.QtGui
-    r = PySide.QtSvg.QSvgRenderer(PySide.QtCore.QXmlStreamReader(PySide.QtCore.QByteArray(svg_string)))
-    image = PySide.QtGui.QImage(r.defaultSize().width(), r.defaultSize().height(), PySide.QtGui.QImage.Format_ARGB32)
+    try:
+        import PySide.QtSvg as PySideQtSvg
+        import PySide.QtGui as PySideQtGui
+        import PySide.QtCore as PySideQtCore
+    except ImportError:
+        import PySide2.QtSvg as PySideQtSvg
+        import PySide2.QtGui as PySideQtGui
+        import PySide2.QtCore as PySideQtCore
 
-    image.fill(PySide.QtGui.QColor(255, 255, 255, 255))
+    r = PySideQtSvg.QSvgRenderer(PySideQtCore.QXmlStreamReader(PySideQtCore.QByteArray(str(svg_string))))
+    image = PySideQtGui.QImage(r.defaultSize().width(), r.defaultSize().height(), PySideQtGui.QImage.Format_ARGB32)
 
-    r.render(PySide.QtGui.QPainter(image))
+    image.fill(PySideQtGui.QColor(255, 255, 255, 255))
+
+    r.render(PySideQtGui.QPainter(image))
     width = image.width()
     height = image.height()
     ptr = image.bits()
